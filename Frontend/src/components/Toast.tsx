@@ -1,86 +1,73 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { CheckCircle, XCircle, Info, X } from "lucide-react";
+import { useEffect } from "react";
 
-export type ToastType = "success" | "error" | "info";
-
-interface ToastItem {
-  id: number;
-  type: ToastType;
+interface ToastProps {
   message: string;
+  type?: "success" | "error" | "info";
+  onClose: () => void;
+  duration?: number;
 }
 
-let addToastGlobal: ((type: ToastType, message: string) => void) | null = null;
-
-export function showToast(type: ToastType, message: string) {
-  if (addToastGlobal) {
-    addToastGlobal(type, message);
-  }
-}
-
-export default function ToastContainer() {
-  const [toasts, setToasts] = useState<ToastItem[]>([]);
-
-  const addToast = useCallback((type: ToastType, message: string) => {
-    const id = Date.now();
-    setToasts((prev) => [...prev, { id, type, message }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 4000);
-  }, []);
-
+export default function Toast({ message, type = "info", onClose, duration = 3000 }: ToastProps) {
   useEffect(() => {
-    addToastGlobal = addToast;
-    return () => {
-      addToastGlobal = null;
-    };
-  }, [addToast]);
+    const timer = setTimeout(() => {
+      onClose();
+    }, duration);
+    return () => clearTimeout(timer);
+  }, [onClose, duration]);
 
-  function removeToast(id: number) {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
-  }
-
-  const iconMap = {
-    success: CheckCircle,
-    error: XCircle,
-    info: Info,
+  const getToastStyles = () => {
+    switch (type) {
+      case "success":
+        return "bg-slate-900 border-emerald-500/40 text-emerald-400 glow-success";
+      case "error":
+        return "bg-slate-900 border-red-500/40 text-red-400 glow-danger";
+      case "info":
+      default:
+        return "bg-slate-900 border-indigo-500/40 text-indigo-400 glow-primary";
+    }
   };
 
-  const colorMap = {
-    success: "border-l-emerald-500 bg-emerald-50 dark:bg-emerald-900/20",
-    error: "border-l-red-500 bg-red-50 dark:bg-red-900/20",
-    info: "border-l-blue-500 bg-blue-50 dark:bg-blue-900/20",
-  };
-
-  const iconColorMap = {
-    success: "text-emerald-500",
-    error: "text-red-500",
-    info: "text-blue-500",
+  const getIcon = () => {
+    switch (type) {
+      case "success":
+        return (
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+        );
+      case "error":
+        return (
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        );
+      case "info":
+      default:
+        return (
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        );
+    }
   };
 
   return (
-    <div className="fixed top-4 right-4 z-[100] space-y-2 max-w-sm">
-      {toasts.map((toast) => {
-        const Icon = iconMap[toast.type];
-        return (
-          <div
-            key={toast.id}
-            className={`flex items-center gap-3 p-4 rounded-xl border-l-4 shadow-lg ${colorMap[toast.type]} animate-slide-up`}
-          >
-            <Icon className={`h-5 w-5 flex-shrink-0 ${iconColorMap[toast.type]}`} />
-            <p className="text-sm text-slate-700 dark:text-slate-200 flex-1">
-              {toast.message}
-            </p>
-            <button
-              onClick={() => removeToast(toast.id)}
-              className="p-1 rounded hover:bg-black/5 dark:hover:bg-white/5"
-            >
-              <X className="h-3.5 w-3.5 text-slate-400" />
-            </button>
-          </div>
-        );
-      })}
+    <div className="fixed bottom-6 right-6 z-50 animate-slide-in-right">
+      <div className={`flex items-center gap-3 px-5 py-3.5 rounded-xl border backdrop-blur-xl shadow-2xl ${getToastStyles()}`}>
+        {getIcon()}
+        <span className="text-sm font-medium text-white">{message}</span>
+        <button
+          onClick={onClose}
+          className="ml-3 text-slate-400 hover:text-white transition-colors"
+          aria-label="Close notification"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
     </div>
   );
 }

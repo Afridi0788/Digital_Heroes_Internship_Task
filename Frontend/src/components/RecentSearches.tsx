@@ -1,59 +1,48 @@
 "use client";
 
-import { History, ExternalLink, AlertCircle } from "lucide-react";
 import type { AuditHistoryItem } from "@/lib/types";
 
 interface RecentSearchesProps {
-  history: AuditHistoryItem[];
+  history?: AuditHistoryItem[];
+  searches?: Array<{ url: string; timestamp?: string }>;
   onSelect: (url: string) => void;
 }
 
-export default function RecentSearches({ history, onSelect }: RecentSearchesProps) {
-  if (history.length === 0) return null;
+export default function RecentSearches({ history, searches, onSelect }: RecentSearchesProps) {
+  const items = history || searches || [];
+
+  if (items.length === 0) return null;
 
   return (
-    <div className="glass-card rounded-2xl p-6 animate-fade-in">
-      <div className="flex items-center gap-2 mb-4">
-        <History className="h-5 w-5 text-indigo-500" />
-        <h2 className="text-lg font-semibold text-slate-800 dark:text-white">
-          Recent Searches
-        </h2>
+    <div className="card-glass rounded-2xl p-6 border border-slate-800">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <div className="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-400">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h3 className="text-sm font-semibold text-slate-300">Recent Audits</h3>
+        </div>
+        <span className="text-xs text-slate-500">{items.length} searches</span>
       </div>
-      <div className="space-y-2">
-        {history.map((item) => (
-          <button
-            key={item.id}
-            onClick={() => onSelect(item.url)}
-            className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors text-left group"
-          >
-            <div
-              className={`p-1.5 rounded-lg ${
-                item.error
-                  ? "bg-red-100 dark:bg-red-900/30"
-                  : "bg-emerald-100 dark:bg-emerald-900/30"
-              }`}
+
+      <div className="flex flex-wrap gap-2">
+        {items.map((item, index) => {
+          const itemUrl = typeof item === "string" ? item : item.url;
+          return (
+            <button
+              key={index}
+              onClick={() => onSelect(itemUrl)}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/80 border border-slate-800 text-xs font-medium text-slate-300 hover:text-indigo-400 hover:border-indigo-500/40 hover:bg-slate-800 transition-all cursor-pointer group"
             >
-              {item.error ? (
-                <AlertCircle className="h-4 w-4 text-red-500" />
-              ) : (
-                <ExternalLink className="h-4 w-4 text-emerald-500" />
-              )}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-slate-700 dark:text-slate-200 truncate">
-                {item.url}
-              </p>
-              <p className="text-xs text-slate-400 dark:text-slate-500">
-                {item.error
-                  ? item.error.slice(0, 50)
-                  : `Status: ${item.status} · ${item.responseTime}ms · ${item.wordCount} words`}
-                {" · "}
-                {new Date(item.createdAt).toLocaleDateString()}
-              </p>
-            </div>
-            <ExternalLink className="h-4 w-4 text-slate-300 dark:text-slate-600 group-hover:text-indigo-500 transition-colors" />
-          </button>
-        ))}
+              <svg className="w-3.5 h-3.5 text-slate-500 group-hover:text-indigo-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+              </svg>
+              <span className="truncate max-w-[200px]">{itemUrl}</span>
+            </button>
+          );
+        })}
       </div>
     </div>
   );
